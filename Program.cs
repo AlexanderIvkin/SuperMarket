@@ -4,22 +4,6 @@ using System.Linq;
 
 namespace Supermarket
 {
-    static class UserUtils
-    {
-        private static Random s_random = new Random();
-
-        public static int GenerateRandomNumber(int minValue, int maxValue)
-        {
-            return s_random.Next(minValue, maxValue);
-        }
-
-        public static int GenerateRandomNumber(int maxValue)
-        {
-            return s_random.Next(maxValue);
-        }
-
-    }
-
     internal class Program
     {
         static void Main(string[] args)
@@ -32,9 +16,9 @@ namespace Supermarket
 
     class Supermarket
     {
+        private List<Product> _assortmentProducts = new List<Product>();
         private Queue<Client> _clients = new Queue<Client>();
         private CashRegister _cashRegister = new CashRegister();
-        private List<Product> _assortmentProducts = new List<Product>();
 
         public Supermarket()
         {
@@ -49,11 +33,11 @@ namespace Supermarket
 
                 Console.Clear();
                 GenerateClientsQueue();
-                Console.WriteLine($"{_cashRegister.ReturnWorkerName()} у нас очередь из {_clients.Count} человек, кончай перекур!\n");
+                Console.WriteLine($"{_cashRegister.WorkerName} у нас очередь из {_clients.Count} человек, кончай перекур!\n");
 
                 while (_clients.Count > 0)
                 {
-                    Console.WriteLine($"{_cashRegister.ReturnWorkerName()} - Берусь за {clientCount} клиента, здравствуйте.");
+                    Console.WriteLine($"{_cashRegister.WorkerName} - Берусь за {clientCount} клиента, здравствуйте.\n");
 
                     _cashRegister.ServiceClient(_clients.Dequeue());
 
@@ -62,15 +46,6 @@ namespace Supermarket
             }
             while (IsRestart());
         }
-
-        private bool IsRestart()
-        {
-            ConsoleKey exitKey = ConsoleKey.Escape;
-            Console.WriteLine(exitKey + " - нажмите для выхода. Остальные клавиши для новых клиентов.");
-
-            return Console.ReadKey(true).Key != exitKey;
-        }
-
 
         private void CreateAssortmentProducts()
         {
@@ -93,13 +68,8 @@ namespace Supermarket
 
             for (int i = 0; i < UserUtils.GenerateRandomNumber(minClientsCount, maxClientsCount); i++)
             {
-                _clients.Enqueue(new Client(ReturnAssortmentProducts()));
+                _clients.Enqueue(new Client(GetAssortmentProducts()));
             }
-        }
-
-        private List<Product> ReturnAssortmentProducts()
-        {
-            return _assortmentProducts.ToList();
         }
 
         private int GeneratePrice()
@@ -109,73 +79,67 @@ namespace Supermarket
 
             return UserUtils.GenerateRandomNumber(minPrice, maxPrice);
         }
+
+        private bool IsRestart()
+        {
+            ConsoleKey exitKey = ConsoleKey.Escape;
+            Console.WriteLine(exitKey + " - нажмите для выхода. Остальные клавиши для новых клиентов.");
+
+            return Console.ReadKey(true).Key != exitKey;
+        }
+
+        private List<Product> GetAssortmentProducts()
+        {
+            return _assortmentProducts.ToList();
+        }
     }
 
     class CashRegister
     {
-        private Client _client;
-        private string _workerName;
-        private int _fullPrice;
-
         public CashRegister()
         {
-            _workerName = "Галя";
+            WorkerName = "Галя";
         }
+
+        public string WorkerName { get; }
 
         public void ServiceClient(Client client)
         {
-            _client = client;
-
-            CalculatePurchasePrice();
-
-            while (TryPayPurchase() == false)
+            Console.WriteLine($"{WorkerName} - Так, вот плюс ага, ещё это... С вас {GetCurrentPrice(client.ReturnProductsInCart())}");
+            while (GetCurrentPrice(client.ReturnProductsInCart()) > client.Cash)
             {
-                Console.WriteLine($"{_workerName} - ОТМЕНА! Этот понабрал на {_fullPrice}, имея всего-навсего , сколоко там у вас? - {_client.Cash}.");
+                Console.WriteLine($"{WorkerName} - ОТМЕНА! Не хватает! Убери чего-нибудь.");
 
-                if (_client.HasProducts)
+                if (client.HasProducts)
                 {
-                    _client.RemoveRandomProduct();
-                    CalculatePurchasePrice();
+                    client.RemoveRandomProduct();
                 }
             }
 
-            if (_client.HasProducts)
+            if (client.HasProducts)
             {
-                _client.ShowPurchasedProducts(_fullPrice);
-                _client.BuyProducts(_fullPrice);
+                Console.WriteLine($"{WorkerName} - Хватает!!! *Шёпотом* Золотце, а ты женат? *Подмигивает*\n");
+                client.BuyProducts(GetCurrentPrice(client.ReturnProductsInCart()));
             }
             else
             {
-                Console.WriteLine($"{_workerName} - Чё ты ваще припёрся без денег? Позырить просто? Нечего тут шляться!(Клиент покидает суровый сельский магазин)");
+                Console.WriteLine($"{WorkerName} - Ноу Мани Ноу Хани, вали отсюда, СЛЕДУЩИЙ");
             }
 
             Console.WriteLine("Нажмите что-нибудь, чтобы продолжить.\n");
             Console.ReadKey(true);
         }
 
-        public string ReturnWorkerName()
+        private int GetCurrentPrice(List<Product> clientCart)
         {
-            return _workerName;
-        }
+            int currentPrice = 0;
 
-        private void CalculatePurchasePrice()
-        {
-            ResetFullPrice();
-
-            foreach (Product product in _client.ReturnProductsInCart())
+            foreach (Product product in clientCart)
             {
-                _fullPrice += product.Price;
+                currentPrice += product.Price;
             }
-        }
 
-        private void ResetFullPrice()
-        {
-            _fullPrice = 0;
-        }
-
-        private bool TryPayPurchase()
-        {
-            return _fullPrice <= _client.Cash;
+            return currentPrice;
         }
     }
 
@@ -186,7 +150,7 @@ namespace Supermarket
 
         public Client(List<Product> assortmentProducts)
         {
-            GenerateClientCash();
+            GenerateCash();
             SelectProducts(assortmentProducts);
         }
 
@@ -195,25 +159,16 @@ namespace Supermarket
 
         public void BuyProducts(int purchaseAmount)
         {
+            ShowPurchasedProducts(purchaseAmount);
             PayCash(purchaseAmount);
             TransferProducts();
-        }
-
-
-        public void ShowPurchasedProducts(int purchaseAmount)
-        {
-            Console.WriteLine($"Клиент имея {Cash} денег, купил на сумму {purchaseAmount} вот чего всякого:");
-
-            foreach (Product product in _cart)
-            {
-                Console.WriteLine($"{product.Name} за {product.Price} денег.");
-            }
         }
 
         public void RemoveRandomProduct()
         {
             int index = UserUtils.GenerateRandomNumber(_cart.Count);
 
+            Console.WriteLine($"Клиент - Выложу-ка я {_cart[index].Name}.\n");
             _cart.RemoveAt(index);
         }
 
@@ -222,7 +177,7 @@ namespace Supermarket
             return _cart.ToList();
         }
 
-        private void GenerateClientCash()
+        private void GenerateCash()
         {
             int minCashCount = 500;
             int maxCashCount = 3000;
@@ -232,11 +187,23 @@ namespace Supermarket
 
         private void SelectProducts(List<Product> products)
         {
+            int minDesiredProductsCount = 3;
             int maxDesiredProductsCount = 10;
+            int currentDesiredProductsCount = UserUtils.GenerateRandomNumber(minDesiredProductsCount, maxDesiredProductsCount);
 
-            for (int i = 0; i < UserUtils.GenerateRandomNumber(maxDesiredProductsCount); i++)
+            for (int i = 0; i < currentDesiredProductsCount; i++)
             {
                 _cart.Add(products[UserUtils.GenerateRandomNumber(products.Count)]);
+            }
+        }
+
+        private void ShowPurchasedProducts(int purchaseAmount)
+        {
+            Console.WriteLine($"Клиент имея {Cash} денег, купил на сумму {purchaseAmount} вот чего всякого:\n");
+
+            foreach (Product product in _cart)
+            {
+                Console.WriteLine($"{product.Name} за {product.Price} денег.");
             }
         }
 
@@ -259,13 +226,28 @@ namespace Supermarket
 
     class Product
     {
-        public string Name { get; }
-        public int Price { get; }
-
         public Product(string name, int price)
         {
             Name = name;
             Price = price;
+        }
+
+        public string Name { get; }
+        public int Price { get; }
+    }
+
+    static class UserUtils
+    {
+        private static Random s_random = new Random();
+
+        public static int GenerateRandomNumber(int minValue, int maxValue)
+        {
+            return s_random.Next(minValue, maxValue);
+        }
+
+        public static int GenerateRandomNumber(int maxValue)
+        {
+            return s_random.Next(maxValue);
         }
     }
 }
