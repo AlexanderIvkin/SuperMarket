@@ -1,0 +1,14 @@
+C:\IJunior\VSprojectsForC#Lessons\OOPLessons\Supermarket\bin\Debug\Supermarket.exe.config
+C:\IJunior\VSprojectsForC#Lessons\OOPLessons\Supermarket\bin\Debug\Supermarket.exe
+C:\IJunior\VSprojectsForC#Lessons\OOPLessons\Supermarket\bin\Debug\Supermarket.pdb
+C:\IJunior\VSprojectsForC#Lessons\OOPLessons\Supermarket\obj\Debug\Supermarket.csproj.AssemblyReference.cache
+C:\IJunior\VSprojectsForC#Lessons\OOPLessons\Supermarket\obj\Debug\Supermarket.csproj.CoreCompileInputs.cache
+C:\IJunior\VSprojectsForC#Lessons\OOPLessons\Supermarket\obj\Debug\Supermarket.exe
+C:\IJunior\VSprojectsForC#Lessons\OOPLessons\Supermarket\obj\Debug\Supermarket.pdb
+C:\VisualStudioProjects\Supermarket\bin\Debug\Supermarket.exe.config
+C:\VisualStudioProjects\Supermarket\bin\Debug\Supermarket.exe
+C:\VisualStudioProjects\Supermarket\bin\Debug\Supermarket.pdb
+C:\VisualStudioProjects\Supermarket\obj\Debug\Supermarket.csproj.AssemblyReference.cache
+C:\VisualStudioProjects\Supermarket\obj\Debug\Supermarket.csproj.CoreCompileInputs.cache
+C:\VisualStudioProjects\Supermarket\obj\Debug\Supermarket.exe
+C:\VisualStudioProjects\Supermarket\obj\Debug\Supermarket.pdb
